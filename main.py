@@ -84,6 +84,30 @@ def apply_strategy(strategy_id: int = Form(...), stock_id: int = Form(...)):
     connection.commit()
 
     return RedirectResponse(url=f"strategy/{strategy_id}",status_code=303)
+
+@app.get("/strategy/{strategy_id}")
+def strategy(request: Request, strategy_id):
+    connection = sqlite3.connect(config.DB)
+    connection.row_factory = sqlite3.Row
+
+    statement = connection.cursor()
+    statement.execute("""
+        SELECT id,name FROM strategy WHERE id = ?
+    """,(strategy_id,))
+
+    strategy = statement.fetchone()
+
+    statement.execute("""
+        SELECT t.name, t.symbol FROM
+	        stock_strategy ss
+	        INNER JOIN ticker t
+	        ON ss.stock_id = t.id
+	    WHERE ss.strategy_id = ? 
+    """,(strategy_id,))
+
+    stocks = statement.fetchall()
+
+    return templates.TemplateResponse("strategy.html", {"request": request, "stocks":stocks, "strategy":strategy})
     
 
     
