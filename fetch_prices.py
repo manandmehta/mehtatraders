@@ -31,7 +31,7 @@ chunk_size = 200
 for i in range(0,len(symbols),chunk_size):
     symbol_chunk = symbols[i:i+chunk_size]
     
-    bars = api.get_bars(symbol_chunk,'1Day',start='2021-09-01',end='2022-09-02')
+    bars = api.get_bars(symbol_chunk,'1Day',start='2021-09-14',end='2022-09-14')
 
     for bar in bars:
         print(f"Processing symbol {bar.S}")

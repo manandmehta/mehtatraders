@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{%  block content %}
+    <h1>
+        <a href="/">Stocks </a> 
+        <i class="angle double right icon"></i>
+    </h1>
+    
+    <table class="ui selectable striped table">
+        <thead>
+            <tr>
+                <th>Orders</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>  
+                    <td>
+                        {{order}}
+                    </td>
+                </tr>
+                {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

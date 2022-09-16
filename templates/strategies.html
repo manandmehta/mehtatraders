@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{%  block content %}
+    <h1>
+        <a href="/">Stocks </a> 
+        <i class="angle double right icon"></i>
+    </h1>
+    
+    <table class="ui selectable striped table">
+        <thead>
+            <tr>
+                <th>Strategies</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for strategy in strategies %}
+                <tr>  
+                    <td>
+                        <a href="strategy/{{strategy.id}}">{{strategy.name}}</a>
+                    </td>
+                </tr>
+                {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+

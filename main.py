@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from datetime import date
+import alpaca_trade_api as tradeapi
 
 
 app = FastAPI()
@@ -26,16 +27,31 @@ def index(request: Request):
         statement.execute("""
             SELECT * FROM 
             (
-	            SELECT  t.symbol,t.name,ticker_id,max(close),date
+	            SELECT t.symbol,t.name,ticker_id,max(close),date
 		        FROM 
 			    ticker_price tp
                 INNER JOIN ticker t 
                 ON tp.ticker_id = t.id
                 GROUP BY tp.ticker_id
                 ORDER BY symbol	
-	        ) WHERE date = ? 
-        """,(date.today().isoformat(),)) 
+	        ) WHERE date = (select max(date) from ticker_price) 
+        """) 
+    if stock_filter == 'new_closing_lows':
+            print('Selected new closing lows')
+            statement.execute("""
+            SELECT * FROM 
+            (
+	            SELECT  t.symbol,t.name,ticker_id,min(close),date
+		        FROM 
+			    ticker_price tp
+                INNER JOIN ticker t 
+                ON tp.ticker_id = t.id
+                GROUP BY tp.ticker_id
+                ORDER BY symbol	
+	        ) WHERE date = (select max(date) from ticker_price) 
+        """) 
     else:
+        print('Selected new closing lows')
         statement.execute("""
             SELECT id,symbol,name FROM ticker order by symbol
         """)
@@ -71,7 +87,18 @@ def index(request: Request, symbol):
 
     return templates.TemplateResponse("stock_detail.html", {"request": request, "stock":row, "bars":bars, "strategies":strategies})
     
-  
+@app.get("/strategies")
+def strategy(request: Request):
+    connection = sqlite3.connect(config.DB)
+    connection.row_factory = sqlite3.Row
+
+    statement = connection.cursor()
+    statement.execute("""
+        SELECT id,name FROM strategy
+    """)
+    strategies = statement.fetchall()
+    return templates.TemplateResponse("strategies.html", {"request": request, "strategies":strategies})
+
 @app.post("/apply_strategy")
 def apply_strategy(strategy_id: int = Form(...), stock_id: int = Form(...)):
     connection = sqlite3.connect(config.DB)
@@ -108,6 +135,12 @@ def strategy(request: Request, strategy_id):
     stocks = statement.fetchall()
 
     return templates.TemplateResponse("strategy.html", {"request": request, "stocks":stocks, "strategy":strategy})
+
+@app.get("/orders")
+def strategy(request: Request):
+   api = tradeapi.REST(config.API_KEY,config.API_SECRET,config.API_BASE_URL)
+   orders = api.list_orders(status='all')
+   return templates.TemplateResponse("orders.html", {"request": request, "orders":orders})
     
 
     
